@@ -22,9 +22,7 @@ local GeminiConfigCmd = APkg and APkg.tPackage or {}
 GeminiConfigCmd.commands = GeminiConfigCmd.commands or {}
 local commands = GeminiConfigCmd.commands
 
-local cfgreg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0")
-local AceConsole -- LoD
-local AceConsoleName = "AceConsole-3.0"
+local cfgreg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0").tPackage
 
 -- Lua APIs
 local strsub, strsplit, strlower, strmatch, strtrim = string.sub, string.split, string.lower, string.match, string.trim
@@ -47,9 +45,7 @@ local L = setmetatable({}, {	-- TODO: replace with proper locale
 
 
 
-local function print(msg)
-	(SELECTED_CHAT_FRAME or DEFAULT_CHAT_FRAME):AddMessage(msg)
-end
+local print = Print
 
 -- constants used by getparam() calls below
 
@@ -746,14 +742,14 @@ end
 --     LibStub("GeminiConfigCmd-3.0").HandleCommand(MyAddon, "mychat", "MyOptions", input)
 --   end
 -- end
-function GeminiConfigCmd:HandleCommand(slashcmd, appName, input)
-
+function GeminiConfigCmd:HandleCommand(slashcmd, input)
+        local appName = self:GetChatCommandOptions(slashcmd)
 	local optgetter = cfgreg:GetOptionsTable(appName)
 	if not optgetter then
-		error([[Usage: HandleCommand("slashcmd", "appName", "input"): 'appName' - no options table "]]..tostring(appName)..[[" has been registered]], 2)
+	   error([[Usage: HandleCommand("slashcmd", "appName", "input"): 'appName' - no options table "]]..tostring(appName)..[[" has been registered]], 2)
 	end
 	local options = assert( optgetter("cmd", MAJOR) )
-	
+
 	local info = {   -- Don't try to recycle this, it gets handed off to callbacks and whatnot
 		[0] = slashcmd,
 		appName = appName,
@@ -773,15 +769,8 @@ end
 -- @param slashcmd The slash command WITHOUT leading slash (only used for error output)
 -- @param appName The application name as given to `:RegisterOptionsTable()`
 function GeminiConfigCmd:CreateChatCommand(slashcmd, appName)
-	if not AceConsole then
-		AceConsole = LibStub(AceConsoleName)
-	end
-	if AceConsole.RegisterChatCommand(self, slashcmd, function(input)
-				GeminiConfigCmd.HandleCommand(self, slashcmd, appName, input)	-- upgradable
-		end,
-	true) then -- succesfully registered so lets get the command -> app table in
-		commands[slashcmd] = appName
-	end
+   Apollo.RegisterSlashCommand(slashcmd, "HandleCommand", self)
+   commands[slashcmd] = appName
 end
 
 --- Utility function that returns the options table that belongs to a slashcommand.

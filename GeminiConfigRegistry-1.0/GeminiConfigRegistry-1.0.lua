@@ -315,7 +315,7 @@ end
 
 --- Returns an iterator of ["appName"]=funcref pairs
 function GeminiConfigRegistry:IterateOptionsTables()
-	return pairs(GeminiConfigRegistry.tables)
+	return pairs(self.tables)
 end
 
 
@@ -329,7 +329,8 @@ end
 -- @param uiType The type of UI to get the table for, one of "cmd", "dropdown", "dialog"
 -- @param uiName The name of the library/addon querying for the table, e.g. "MyLib-1.0"
 function GeminiConfigRegistry:GetOptionsTable(appName, uiType, uiName)
-	local f = GeminiConfigRegistry.tables[appName]
+        if not appName then return end
+	local f = self.tables[appName]
 	if not f then
 		return nil
 	end

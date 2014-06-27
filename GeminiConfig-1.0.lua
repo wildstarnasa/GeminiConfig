@@ -18,23 +18,8 @@ end
 local GeminiConfig = APkg and APkg.tPackage or {}
 local tLibError = Apollo.GetPackage("Gemini:LibError-1.0")
 
-local cfgreg
-local cfgcmd
-
-local function GetBaseDirectory() 
-   local strPrefix = Apollo.GetAssetFolder()
-   local tToc = XmlDoc.CreateFromFile(strPrefix.."\\toc.xml"):ToTable()
-   for k,v in ipairs(tToc) do
-      local strPath = string.match(v.Name, "(.*)[\\/]GeminiConfig")
-      if strPath ~= nil and strPath ~= "" then
-	 strPrefix = strPrefix .. "\\" .. strPath .. "\\"
-	 break
-      end
-   end
-   Print(strPrefix)
-   return strPrefix
-end
-
+local cfgcmd = Apollo.GetPackage("Gemini:ConfigCmd-1.0").tPackage
+local cfgreg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0").tPackage
 
 -- Lua APIs
 local pcall, error, type, pairs = pcall, error, type, pairs
@@ -56,35 +41,54 @@ local pcall, error, type, pairs = pcall, error, type, pairs
 -- local GeminiConfig = LibStub("GeminiConfig-3.0")
 -- GeminiConfig:RegisterOptionsTable("MyAddon", myOptions, {"/myslash", "/my"})
 function GeminiConfig:RegisterOptionsTable(appName, options, slashcmd)
-	local ok,msg = pcall(cfgreg.RegisterOptionsTable, self, appName, options)
-	if not ok then error(msg, 2) end
-	
-	if slashcmd then
-		if type(slashcmd) == "table" then
-			for _,cmd in pairs(slashcmd) do
-				cfgcmd:CreateChatCommand(cmd, appName)
-			end
-		else
-			cfgcmd:CreateChatCommand(slashcmd, appName)
-		end
-	end
+   local ok,msg = pcall(cfgreg.RegisterOptionsTable, self, appName, options)
+   if not ok then error(msg, 2) end
+   
+   if slashcmd then
+      if type(slashcmd) == "table" then
+	 for _,cmd in pairs(slashcmd) do
+	    cfgcmd:CreateChatCommand(cmd, appName)
+	 end
+      else
+	 cfgcmd:CreateChatCommand(slashcmd, appName)
+      end
+   end
 end
 
 local fnErrorHandler = tLibError and tLibError.tPackage and tLibError.tPackage.Error or Print
 
-local function loadModule(pkg, mod)
-   local func =  assert(loadfile(mod))
+local function loadModule(dir, mod)
+   local func =  assert(loadfile(dir.."\\"..mod.."\\"..mod..".lua"))
    if func then
       return xpcall(func, fnErrorHandler)
    end
 end
 
-function GeminiConfig:OnLoad()
-   self.dir = GetBaseDirectory()
-   cfgreg = loadModule("GeminiConfigRegistry-1.0.lua")
-   cfgcmd = loadModule("GeminiConfigCmd-1.0.lua")
-   loadModule("GeminiConfigDialog-1.0")
-   self.cmd = cfgcmd
+local function GetBaseDirectory() 
+   local strPrefix = Apollo.GetAssetFolder()
+   local tToc = XmlDoc.CreateFromFile(strPrefix.."\\toc.xml"):ToTable()
+   for k,v in ipairs(tToc) do
+      local strPath = string.match(v.Name, "(.*)[\\/]GeminiConfig")
+      if strPath ~= nil and strPath ~= "" then
+	 strPrefix = strPrefix .. "\\" .. strPath .. "\\"
+	 break
+      end
+   end
+   Print(strPrefix)
+   return strPrefix
 end
+
+
+function GeminiConfig:OnLoad()
+   local dir = GetBaseDirectory()
+   loadModule(dir, "GeminiConfigRegistry-1.0.lua")
+   loadModule(dir, "GeminiConfigCmd-1.0.lua")
+   loadModule(dir, "GeminiConfigDialog-1.0")
+   cfgcmd = Apollo.GetPackage("Gemini:ConfigCmd-1.0").tPackage
+   cfgreg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0").tPackage
+   self.dir = dir
+   self.cfgreg = cfgreg
+end
+
 Apollo.RegisterPackage(GeminiConfig, MAJOR, MINOR, {})
 
