@@ -1935,4 +1935,3 @@ function GeminiConfigDialog:AddToBlizOptions(appName, name, parent, ...)
 end
 
 Apollo.RegisterPackage(GeminiConfigDialog, MAJOR, MINOR, {})
-return Apollo.GetPackage(MAJOR).tPackage

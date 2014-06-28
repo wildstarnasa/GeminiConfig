@@ -11,13 +11,31 @@ Very light wrapper library that combines all the AceConfig subcomponents into on
 ]]
 
 local MAJOR, MINOR = "Gemini:Config-1.0", 1
+
+local tLibError = Apollo.GetPackage("Gemini:LibError-1.0")
+local fnErrorHandler = tLibError and tLibError.tPackage and tLibError.tPackage.Error or Print
+
+
+-- first load the submodules
+local function loadModule(dir, mod)
+   local func =  assert(loadfile(dir..mod.."\\"..mod..".lua"))
+   if func then
+      return xpcall(func, fnErrorHandler)
+   end
+end
+
+-- This gets the current directory of this file, so it also works when embedded
+local dir = string.sub(string.gsub(debug.getinfo(1).source, "^(.+\\)[^\\]+$", "%1"), 2, -1)
+
+loadModule(dir, "GeminiConfigRegistry-1.0")
+loadModule(dir, "GeminiConfigCmd-1.0")
+loadModule(dir, "GeminiConfigDialog-1.0")
+
 local APkg = Apollo.GetPackage(MAJOR)
 if APkg and (APkg.nVersion or 0) >= MINOR then
 	return -- no upgrade is needed
 end
 local GeminiConfig = APkg and APkg.tPackage or {}
-local tLibError = Apollo.GetPackage("Gemini:LibError-1.0")
-
 local cfgcmd = Apollo.GetPackage("Gemini:ConfigCmd-1.0").tPackage
 local cfgreg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0").tPackage
 
@@ -53,41 +71,6 @@ function GeminiConfig:RegisterOptionsTable(appName, options, slashcmd)
 	 cfgcmd:CreateChatCommand(slashcmd, appName)
       end
    end
-end
-
-local fnErrorHandler = tLibError and tLibError.tPackage and tLibError.tPackage.Error or Print
-
-local function loadModule(dir, mod)
-   local func =  assert(loadfile(dir.."\\"..mod.."\\"..mod..".lua"))
-   if func then
-      return xpcall(func, fnErrorHandler)
-   end
-end
-
-local function GetBaseDirectory() 
-   local strPrefix = Apollo.GetAssetFolder()
-   local tToc = XmlDoc.CreateFromFile(strPrefix.."\\toc.xml"):ToTable()
-   for k,v in ipairs(tToc) do
-      local strPath = string.match(v.Name, "(.*)[\\/]GeminiConfig")
-      if strPath ~= nil and strPath ~= "" then
-	 strPrefix = strPrefix .. "\\" .. strPath .. "\\"
-	 break
-      end
-   end
-   Print(strPrefix)
-   return strPrefix
-end
-
-
-function GeminiConfig:OnLoad()
-   local dir = GetBaseDirectory()
-   loadModule(dir, "GeminiConfigRegistry-1.0.lua")
-   loadModule(dir, "GeminiConfigCmd-1.0.lua")
-   loadModule(dir, "GeminiConfigDialog-1.0")
-   cfgcmd = Apollo.GetPackage("Gemini:ConfigCmd-1.0").tPackage
-   cfgreg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0").tPackage
-   self.dir = dir
-   self.cfgreg = cfgreg
 end
 
 Apollo.RegisterPackage(GeminiConfig, MAJOR, MINOR, {})

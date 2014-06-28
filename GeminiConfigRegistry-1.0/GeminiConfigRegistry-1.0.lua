@@ -343,4 +343,3 @@ function GeminiConfigRegistry:GetOptionsTable(appName, uiType, uiName)
 end
 
 Apollo.RegisterPackage(GeminiConfigRegistry, MAJOR, MINOR, {})
-return Apollo.GetPackage(MAJOR).tPackage

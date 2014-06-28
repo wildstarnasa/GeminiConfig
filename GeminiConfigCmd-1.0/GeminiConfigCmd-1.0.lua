@@ -94,7 +94,6 @@ local function callmethod(info, inputpos, tab, methodtype, ...)
 	info.arg = tab.arg
 	info.option = tab
 	info.type = tab.type
-
 	if type(method)=="function" then
 		return method(info, ...)
 	elseif type(method)=="string" then
@@ -126,16 +125,15 @@ end
 -- do_final() - do the final step (set/execute) along with validation and confirmation
 
 local function do_final(info, inputpos, tab, methodtype, ...)
-	if info.validate then 
-		local res = callmethod(info,inputpos,tab,"validate",...)
-		if type(res)=="string" then
-			usererr(info, inputpos, "'"..strsub(info.input, inputpos).."' - "..res)
-			return
-		end
-	end
-	-- console ignores .confirm
-	
-	callmethod(info,inputpos,tab,methodtype, ...)
+   if info.validate then 
+      local res = callmethod(info,inputpos,tab,"validate",...)
+      if type(res)=="string" then
+	 usererr(info, inputpos, "'"..strsub(info.input, inputpos).."' - "..res)
+	 return
+      end
+   end
+   -- console ignores .confirm
+   callmethod(info,inputpos,tab,methodtype, ...)
 end
 
 
@@ -782,4 +780,3 @@ function GeminiConfigCmd:GetChatCommandOptions(slashcmd)
 end
 
 Apollo.RegisterPackage(GeminiConfigCmd, MAJOR, MINOR, {})
-return Apollo.GetPackage(MAJOR).tPackage
