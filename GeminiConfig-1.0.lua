@@ -25,6 +25,7 @@ local function loadModule(dir, mod)
 end
 
 -- This gets the current directory of this file, so it also works when embedded
+local strsub, strgsub, debug = string.sub, string.gsub, debug
 local dir = string.sub(string.gsub(debug.getinfo(1).source, "^(.+\\)[^\\]+$", "%1"), 2, -1)
 
 loadModule(dir, "GeminiConfigRegistry-1.0")

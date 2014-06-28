@@ -19,6 +19,9 @@ if APkg and (APkg.nVersion or 0) >= MINOR then
 end
 local GeminiConfigCmd = APkg and APkg.tPackage or {}
 
+local tLibError = Apollo.GetPackage("Gemini:LibError-1.0")
+local fnErrorHandler = tLibError and tLibError.tPackage and tLibError.tPackage.Error or Print
+
 GeminiConfigCmd.commands = GeminiConfigCmd.commands or {}
 local commands = GeminiConfigCmd.commands
 
@@ -30,22 +33,15 @@ local format, tonumber, tostring = string.format, tonumber, tostring
 local tsort, tinsert = table.sort, table.insert
 local select, pairs, next, type = select, pairs, next, type
 local error, assert = error, assert
+local print = Print
 
 -- WoW APIs
 local _G = _G
-
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: LibStub, SELECTED_CHAT_FRAME, DEFAULT_CHAT_FRAME
 
 
 local L = setmetatable({}, {	-- TODO: replace with proper locale
 	__index = function(self,k) return k end
 })
-
-
-
-local print = Print
 
 -- constants used by getparam() calls below
 
@@ -138,7 +134,6 @@ end
 
 
 -- getparam() - used by handle() to retreive and store "handler", "get", "set", etc
-
 local function getparam(info, inputpos, tab, depth, paramname, types, errormsg)
 	local old,oldat = info[paramname], info[paramname.."_at"]
 	local val=tab[paramname]
@@ -197,7 +192,8 @@ end
 
 local function showhelp(info, inputpos, tab, depth, noHead)
 	if not noHead then
-		print("|cff33ff99"..info.appName.."|r: Arguments to |cffffff78/"..info[0].."|r "..strsub(info.input,1,inputpos-1)..":")
+--		print("<T TextColor=\"ff33ff99\">"..info.appName.."</T>: Arguments to <T TextColor=\"ffffff78\">/"..info[0].."</T> "..strsub(info.input,1,inputpos-1)..":")
+	   print(info.appName..": Arguments to /"..info[0].." "..strsub(info.input,1,inputpos-1)..":")
 	end
 	
 	local sortTbl = {}	-- [1..n]=name
@@ -399,7 +395,6 @@ local function handle(info, inputpos, tab, depth, retfalse)
 	if tab.type=="execute" then
 		------------ execute --------------------------------------------
 		do_final(info, inputpos, tab, "func")
-		
 
 	
 	elseif tab.type=="input" then
@@ -759,7 +754,7 @@ function GeminiConfigCmd:HandleCommand(slashcmd, input)
 		uiName = MAJOR,
 	}
 	
-	handle(info, 1, options, 0)  -- (info, inputpos, table, depth)
+	xpcall(function() handle(info, 1, options, 0) end, fnErrorHandler)
 end
 
 --- Utility function to create a slash command handler.
