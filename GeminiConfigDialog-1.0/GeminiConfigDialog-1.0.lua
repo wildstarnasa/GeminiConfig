@@ -15,7 +15,7 @@ GeminiConfigDialog.frame.apps = GeminiConfigDialog.frame.apps or {}
 GeminiConfigDialog.frame.closing = GeminiConfigDialog.frame.closing or {}
 GeminiConfigDialog.frame.closeAllOverride = GeminiConfigDialog.frame.closeAllOverride or {}
 
-local gui = Apollo.GetPackage("Gemini:GUI-1.0").tPackage
+local gui = Apollo.GetPackage("AceGUI-3.0").tPackage
 local reg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0").tPackage
 
 -- Lua APIs
@@ -26,11 +26,6 @@ local pairs, next, select, type, unpack, wipe, ipairs = pairs, next, select, typ
 local rawset, tostring, tonumber = rawset, tostring, tonumber
 local math_min, math_max, math_floor = math.min, math.max, math.floor
 
--- Global vars/functions that we don't upvalue since they might get hooked, or upgraded
--- List them here for Mikk's FindGlobals script
--- GLOBALS: NORMAL_FONT_COLOR, GameTooltip, StaticPopupDialogs, ACCEPT, CANCEL, StaticPopup_Show
--- GLOBALS: PlaySound, GameFontHighlight, GameFontHighlightSmall, GameFontHighlightLarge
--- GLOBALS: CloseSpecialWindows, InterfaceOptions_AddCategory, geterrorhandler
 
 local emptyTbl = {}
 
@@ -38,11 +33,8 @@ local emptyTbl = {}
 	 xpcall safecall implementation
 ]]
 local xpcall = xpcall
-
-local function errorhandler(err)
-	return geterrorhandler()(err)
-end
-
+local tLibError = Apollo.GetPackage("Gemini:LibError-1.0")
+local errorhandler = tLibError and tLibError.tPackage and tLibError.tPackage.Error or Print
 local function CreateDispatcher(argCount)
 	local code = [[
 		local xpcall, eh = ...
@@ -123,8 +115,8 @@ do
 	end
 	function del(t)
 		--delcount = delcount + 1
-		wipe(t)
-		pool[t] = true
+--		wipe(t)
+--		pool[t] = true
 	end
 --	function cached()
 --		local n = 0
@@ -532,31 +524,29 @@ local function OptionOnMouseOver(widget, event)
 	local path = user.path
 	local appName = user.appName
 
-	GameTooltip:SetOwner(widget.frame, "ANCHOR_TOPRIGHT")
 	local name = GetOptionsMemberValue("name", opt, options, path, appName)
 	local desc = GetOptionsMemberValue("desc", opt, options, path, appName)
 	local usage = GetOptionsMemberValue("usage", opt, options, path, appName)
 	local descStyle = opt.descStyle
 	
 	if descStyle and descStyle ~= "tooltip" then return end
-	
-	GameTooltip:SetText(name, 1, .82, 0, 1)
+	local text = "<P TextColor=\"ffff9f00\">"..name.."</P>"
 	
 	if opt.type == "multiselect" then
-		GameTooltip:AddLine(user.text,0.5, 0.5, 0.8, 1)
+		text = text .. "<P TextColor=\"ff7f7fcf\">"..user.text.."</P>"
 	end	
 	if type(desc) == "string" then
-		GameTooltip:AddLine(desc, 1, 1, 1, 1)
+		text = text .. "<P TextColor=\"ffffffff\">"..desc.."</P>"
 	end
 	if type(usage) == "string" then
-		GameTooltip:AddLine("Usage: "..usage, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
+		text = text .. "<P TextColor=\"ffffffff\">Usage: "..usage.."</P>"
+--		GameTooltip:AddLine("Usage: "..usage, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
 	end
-
-	GameTooltip:Show()
+	widget.frame:SetTooltip(text)
 end
 
 local function OptionOnMouseLeave(widget, event)
-	GameTooltip:Hide()
+
 end
 
 local function GetFuncName(option)
@@ -789,9 +779,9 @@ local function ActivateControl(widget, event, ...)
 		--call the function
 		if type(func) == "string" then
 			if handler and handler[func] then
-				safecall(handler[func],handler, info, ...)
+			   safecall(handler[func],handler, info, ...)
 			else
-				error(format("Method %s doesn't exist in handler for type func", func))
+			   error(format("Method %s doesn't exist in handler for type func", func))
 			end
 		elseif type(func) == "function" then
 			safecall(func,info, ...)
@@ -1062,16 +1052,16 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 		tinsert(path, k)
 		local hidden = CheckOptionHidden(v, options, path, appName)
 		local name = GetOptionsMemberValue("name", v, options, path, appName)
-		if not hidden then
+		if not hidden then 
 			if v.type == "group" then
 				if inline or pickfirstset(v.dialogInline,v.guiInline,v.inline, false) then
 					--Inline group
 					local GroupContainer
 					if name and name ~= "" then
-						GroupContainer = gui:Create("InlineGroup")
+						GroupContainer = gui:Create("InlineGroup", container)
 						GroupContainer:SetTitle(name or "")
 					else
-						GroupContainer = gui:Create("SimpleGroup")
+						GroupContainer = gui:Create("SimpleGroup", container)
 					end
 					
 					GroupContainer.width = "fill"
@@ -1091,7 +1081,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					local image, width, height = GetOptionsMemberValue("image",v, options, path, appName)
 					
 					if type(image) == "string" then
-						control = gui:Create("Icon")
+						control = gui:Create("Icon", container)
 						if not width then
 							width = GetOptionsMemberValue("imageWidth",v, options, path, appName)
 						end
@@ -1112,17 +1102,17 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						control:SetImageSize(width, height)
 						control:SetLabel(name)
 					else
-						control = gui:Create("Button")
+						control = gui:Create("Button", container)
 						control:SetText(name)
 					end
 					control:SetCallback("OnClick",ActivateControl)
 
 				elseif v.type == "input" then
 					local controlType = v.dialogControl or v.control or (v.multiline and "MultiLineEditBox") or "EditBox"
-					control = gui:Create(controlType)
+					control = gui:Create(controlType, container)
 					if not control then
-						geterrorhandler()(("Invalid Custom Control Type - %s"):format(tostring(controlType)))
-						control = gui:Create(v.multiline and "MultiLineEditBox" or "EditBox")
+						errorhandler(("Invalid Custom Control Type - %s"):format(tostring(controlType)))
+						control = gui:Create(v.multiline and "MultiLineEditBox" or "EditBox", container)
 					end
 					
 					if v.multiline and control.SetNumLines then
@@ -1137,7 +1127,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					control:SetText(text)
 
 				elseif v.type == "toggle" then
-					control = gui:Create("CheckBox")
+					control = gui:Create("CheckBox", container)
 					control:SetLabel(name)
 					control:SetTriState(v.tristate)
 					local value = GetOptionsMemberValue("get",v, options, path, appName)
@@ -1160,7 +1150,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						end
 					end
 				elseif v.type == "range" then
-					control = gui:Create("Slider")
+					control = gui:Create("Slider", container)
 					control:SetLabel(name)
 					control:SetSliderValues(v.softMin or v.min or 0, v.softMax or v.max or 100, v.bigStep or v.step or 0)
 					control:SetIsPercent(v.isPercent)
@@ -1177,7 +1167,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					if v.style == "radio" then
 						local disabled = CheckOptionDisabled(v, options, path, appName)
 						local width = GetOptionsMemberValue("width",v,options,path,appName)
-						control = gui:Create("InlineGroup")
+						control = gui:Create("InlineGroup", container)
 						control:SetLayout("Flow")
 						control:SetTitle(name)
 						control.width = "fill"
@@ -1191,7 +1181,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						tsort(t)
 						for k, value in ipairs(t) do
 							local text = values[value]
-							local radio = gui:Create("CheckBox")
+							local radio = gui:Create("CheckBox", control)
 							radio:SetLabel(text)
 							radio:SetUserData("value", value)
 							radio:SetUserData("text", text)
@@ -1215,14 +1205,14 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						control:DoLayout()
 					else
 						local controlType = v.dialogControl or v.control or "Dropdown"
-						control = gui:Create(controlType)
+						control = gui:Create(controlType, container)
 						if not control then
-							geterrorhandler()(("Invalid Custom Control Type - %s"):format(tostring(controlType)))
-							control = gui:Create("Dropdown")
+							errorhandler(("Invalid Custom Control Type - %s"):format(tostring(controlType)))
+							control = gui:Create("Dropdown", container)
 						end
 						local itemType = v.itemControl
 						if itemType and not gui:GetWidgetVersion(itemType) then
-							geterrorhandler()(("Invalid Custom Item Type - %s"):format(tostring(itemType)))
+							errorhandler(("Invalid Custom Item Type - %s"):format(tostring(itemType)))
 							itemType = nil
 						end
 						control:SetLabel(name)
@@ -1250,9 +1240,9 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					tsort(valuesort)
 					
 					if controlType then
-						control = gui:Create(controlType)
+						control = gui:Create(controlType, container)
 						if not control then
-							geterrorhandler()(("Invalid Custom Control Type - %s"):format(tostring(controlType)))
+							errorhandler(("Invalid Custom Control Type - %s"):format(tostring(controlType)))
 						end
 					end
 					if control then
@@ -1279,7 +1269,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 							control:SetItemValue(key,value)
 						end
 					else
-						control = gui:Create("InlineGroup")
+						control = gui:Create("InlineGroup", container)
 						control:SetLayout("Flow")
 						control:SetTitle(name)
 						control.width = "fill"
@@ -1289,7 +1279,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						for i = 1, #valuesort do
 							local value = valuesort[i]
 							local text = values[value]
-							local check = gui:Create("CheckBox")
+							local check = gui:Create("CheckBox", control)
 							check:SetLabel(text)
 							check:SetUserData("value", value)
 							check:SetUserData("text", text)
@@ -1318,7 +1308,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					del(valuesort)
 
 				elseif v.type == "color" then
-					control = gui:Create("ColorPicker")
+					control = gui:Create("ColorPicker", container)
 					control:SetLabel(name)
 					control:SetHasAlpha(GetOptionsMemberValue("hasAlpha",v, options, path, appName))
 					control:SetColor(GetOptionsMemberValue("get",v, options, path, appName))
@@ -1326,27 +1316,27 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					control:SetCallback("OnValueConfirmed",ActivateControl)
 
 				elseif v.type == "keybinding" then
-					control = gui:Create("Keybinding")
+					control = gui:Create("Keybinding", container)
 					control:SetLabel(name)
 					control:SetKey(GetOptionsMemberValue("get",v, options, path, appName))
 					control:SetCallback("OnKeyChanged",ActivateControl)
 
 				elseif v.type == "header" then
-					control = gui:Create("Heading")
+					control = gui:Create("Heading", container)
 					control:SetText(name)
 					control.width = "fill"
 
 				elseif v.type == "description" then
-					control = gui:Create("Label")
+					control = gui:Create("Label", container)
 					control:SetText(name)
 					
 					local fontSize = GetOptionsMemberValue("fontSize",v, options, path, appName)
 					if fontSize == "medium" then
-						control:SetFontObject(GameFontHighlight)
+					   control:SetFont("CRB_InterfaceMedium")
 					elseif fontSize == "large" then
-						control:SetFontObject(GameFontHighlightLarge)
+					   control:SetFont("CRB_InterfaceLarge")
 					else -- small or invalid
-						control:SetFontObject(GameFontHighlightSmall)
+					   control:SetFont("CRB_InterfaceSmall")
 					end
 					
 					local imageCoords = GetOptionsMemberValue("imageCoords",v, options, path, appName)
@@ -1429,7 +1419,7 @@ local function TreeOnButtonEnter(widget, event, uniquevalue, button)
 		feedpath[i] = path[i]
 	end
 
-	BuildPath(feedpath, ("\001"):split(uniquevalue))
+	BuildPath(feedpath, gui:split(uniquevalue, "\001"))
 	local group = options
 	for i = 1, #feedpath do
 		if not group then return end
@@ -1469,7 +1459,7 @@ local function GroupExists(appName, options, path, uniquevalue)
 		feedpath[i] = path[i]
 	end
 	
-	BuildPath(feedpath, ("\001"):split(uniquevalue))
+	BuildPath(feedpath, gui:split(uniquevalue, "\001"))
 	
 	local group = options
 	for i = 1, #feedpath do
@@ -1502,7 +1492,7 @@ local function GroupSelected(widget, event, uniquevalue)
 		feedpath[i] = path[i]
 	end
 
-	BuildPath(feedpath, ("\001"):split(uniquevalue))
+	BuildPath(feedpath, gui:split(uniquevalue, "\001"))
 	local group = options
 	for i = 1, #feedpath do
 		group = GetSubOption(group, feedpath[i])
@@ -1573,7 +1563,7 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 	--Add a scrollframe if we are not going to add a group control, this is the inverse of the conditions for that later on
 	if (not (hasChildGroups and not inline)) or (grouptype ~= "tab" and grouptype ~= "select" and (parenttype == "tree" and not isRoot)) then
 		if container.type ~= "InlineGroup" and container.type ~= "SimpleGroup" then
-			scroll = gui:Create("ScrollFrame")
+			scroll = gui:Create("ScrollFrame", container)
 			scroll:SetLayout("flow")
 			scroll.width = "fill"
 			scroll.height = "fill"
@@ -1598,7 +1588,7 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 		local name = GetOptionsMemberValue("name", group, options, path, appName)
 		if grouptype == "tab" then
 
-			local tab = gui:Create("TabGroup")
+			local tab = gui:Create("TabGroup", container)
 			InjectInfo(tab, options, group, path, rootframe, appName)
 			tab:SetCallback("OnGroupSelected", GroupSelected)
 			tab:SetCallback("OnTabEnter", TreeOnButtonEnter)
@@ -1623,12 +1613,11 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 					break
 				end
 			end
-			
 			container:AddChild(tab)
-
+			
 		elseif grouptype == "select" then
 
-			local select = gui:Create("DropdownGroup")
+			local select = gui:Create("DropdownGroup", container)
 			select:SetTitle(name)
 			InjectInfo(select, options, group, path, rootframe, appName)
 			select:SetCallback("OnGroupSelected", GroupSelected)
@@ -1649,13 +1638,12 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 			
 			select.width = "fill"
 			select.height = "fill"
-
 			container:AddChild(select)
 
 		--assume tree group by default
 		--if parenttype is tree then this group is already a node on that tree
 		elseif (parenttype ~= "tree") or isRoot then
-			local tree = gui:Create("TreeGroup")
+			local tree = gui:Create("TreeGroup", container)
 			InjectInfo(tree, options, group, path, rootframe, appName)
 			tree:EnableButtonTooltips(false)
 			
@@ -1683,10 +1671,11 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 					break
 				end
 			end
-
 			container:AddChild(tree)
 		end
 	end
+	container:ResumeLayout()
+	container:DoLayout()
 end
 
 local old_CloseSpecialWindows
@@ -1912,7 +1901,7 @@ function GeminiConfigDialog:AddToBlizOptions(appName, name, parent, ...)
 	end
 	
 	if not BlizOptions[appName][key] then
-		local group = gui:Create("BlizOptionsGroup")
+		local group = gui:Create("BlizOptionsGroup", container)
 		BlizOptions[appName][key] = group
 		group:SetName(name or appName, parent)
 
