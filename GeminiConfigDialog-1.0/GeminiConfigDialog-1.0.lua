@@ -1,4 +1,4 @@
---- GeminiConfigDialog-1.0 generates AceGUI-3.0 based windows based on option tables.
+--- GeminiConfigDialog-1.0 generates Gemini:ConfigGUI-1.0 based windows based on option tables.
 
 local MAJOR, MINOR = "Gemini:ConfigDialog-1.0", 1
 local APkg = Apollo.GetPackage(MAJOR)
@@ -15,7 +15,7 @@ GeminiConfigDialog.frame.apps = GeminiConfigDialog.frame.apps or {}
 GeminiConfigDialog.frame.closing = GeminiConfigDialog.frame.closing or {}
 GeminiConfigDialog.frame.closeAllOverride = GeminiConfigDialog.frame.closeAllOverride or {}
 
-local gui = Apollo.GetPackage("AceGUI-3.0").tPackage
+local gui = Apollo.GetPackage("Gemini:ConfigGUI-1.0").tPackage
 local reg = Apollo.GetPackage("Gemini:ConfigRegistry-1.0").tPackage
 
 -- Lua APIs
@@ -70,7 +70,7 @@ local function safecall(func, ...)
 	return Dispatchers[select("#", ...)](func, ...)
 end
 
-local width_multiplier = 170
+local width_multiplier = 220
 
 --[[
 Group Types
@@ -557,46 +557,119 @@ local function GetFuncName(option)
 		return "set"
 	end
 end
-local function confirmPopup(appName, rootframe, basepath, info, message, func, ...)
-	if not StaticPopupDialogs["ACECONFIGDIALOG30_CONFIRM_DIALOG"] then
-		StaticPopupDialogs["ACECONFIGDIALOG30_CONFIRM_DIALOG"] = {}
-	end
-	local t = StaticPopupDialogs["ACECONFIGDIALOG30_CONFIRM_DIALOG"]
-	for k in pairs(t) do
-		t[k] = nil
-	end
-	t.text = message
-	t.button1 = ACCEPT
-	t.button2 = CANCEL
-	t.preferredIndex = STATICPOPUP_NUMDIALOGS
-	local dialog, oldstrata
-	t.OnAccept = function()
-		safecall(func, unpack(t))
-		if dialog and oldstrata then
-			dialog:SetFrameStrata(oldstrata)
-		end
-		GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
-		del(info)
-	end
-	t.OnCancel = function()
-		if dialog and oldstrata then
-			dialog:SetFrameStrata(oldstrata)
-		end
-		GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
-		del(info)
-	end
-	for i = 1, select("#", ...) do
-		t[i] = select(i, ...) or false
-	end
-	t.timeout = 0
-	t.whileDead = 1
-	t.hideOnEscape = 1
+local tGeminiConfirmDialogDef = {
+   AnchorOffsets = { -210, -120, 210, 120 },
+   AnchorPoints = "CENTER",
+   RelativeToClient = true, 
+   Font = "CRB_HeaderGigantic", 
+   BGColor = "UI_WindowBGDefault", 
+   TextColor = "UI_WindowTextDefault", 
+   Template = "CRB_NormalFramedThick", 
+   Name = "GeminiConfirmDialog", 
+   Border = true, 
+   Picture = true, 
+   SwallowMouseClicks = true, 
+   Moveable = true, 
+   Escapable = true, 
+   Overlapped = true, 
+   UseTemplateBG = true, 
+   DT_VCENTER = true, 
+   DT_CENTER = true, 
+   DT_WORDBREAK = true, 
+   Events = {
+      WindowKeyEscape = "OnDialogCancel",
+   },
+   Children = {
+      {
+         AnchorOffsets = { 40, -89, 196, -9 },
+         AnchorPoints = "BOTTOMLEFT",
+         Class = "Button", 
+         Base = "BK3:btnHolo_Blue_Med", 
+         Font = "CRB_HeaderHuge", 
+         ButtonType = "PushButton", 
+         DT_VCENTER = true, 
+         DT_CENTER = true, 
+         BGColor = "UI_BtnBGDefault", 
+         TextColor = "UI_BtnTextDefault", 
+         NormalTextColor = "UI_BtnTextDefault", 
+         PressedTextColor = "UI_BtnTextDefault", 
+         FlybyTextColor = "UI_BtnTextDefault", 
+         PressedFlybyTextColor = "UI_BtnTextDefault", 
+         DisabledTextColor = "UI_BtnTextDefault", 
+         Name = "Accept", 
+         TextId = "CRB_Accept", 
+         Events = {
+            ButtonSignal = "OnDialogAccept",
+         },
+      },
+      {
+         AnchorOffsets = { -196, -89, -40, -9 },
+         AnchorPoints = "BOTTOMRIGHT",
+         Class = "Button", 
+         Base = "BK3:btnHolo_Red_Med", 
+         Font = "CRB_HeaderHuge", 
+         ButtonType = "PushButton", 
+         DT_VCENTER = true, 
+         DT_CENTER = true, 
+         BGColor = "UI_BtnBGDefault", 
+         TextColor = "UI_BtnTextDefault", 
+         NormalTextColor = "UI_BtnTextDefault", 
+         PressedTextColor = "UI_BtnTextDefault", 
+         FlybyTextColor = "UI_BtnTextDefault", 
+         PressedFlybyTextColor = "UI_BtnTextDefault", 
+         DisabledTextColor = "UI_BtnTextDefault", 
+         Name = "Cancel", 
+         TextId = "Launcher_Cancel", 
+         Events = {
+            ButtonSignal = "OnDialogCancel",
+         },
+      },
+      {
+         AnchorOffsets = { 15, 15, -15, -80 },
+         AnchorPoints = "FILL",
+         RelativeToClient = true, 
+         Font = "CRB_HeaderLarge", 
+         Text = "Are you really sure that you want to do that Dave?", 
+         BGColor = "UI_WindowBGDefault", 
+         TextColor = "UI_WindowTextDefault", 
+         Name = "Contents", 
+         DT_VCENTER = true, 
+         DT_CENTER = true, 
+         DT_WORDBREAK = true, 
+         IgnoreMouse = true, 
+         NewWindowDepth = 1, 
+      },
+   },
+}
 
-	dialog = StaticPopup_Show("ACECONFIGDIALOG30_CONFIRM_DIALOG")
-	if dialog then
-		oldstrata = dialog:GetFrameStrata()
-		dialog:SetFrameStrata("TOOLTIP")
-	end
+local function confirmPopup(appName, rootframe, basepath, info, message, func, ...)
+   local t = {}
+   
+   local dialog = Apollo.GetPackage("Gemini:GUI-1.0").tPackage:Create(tGeminiConfirmDialogDef):GetInstance(t)
+   dialog:FindChild("Contents"):SetText(message)
+   
+   t.OnDialogAccept = function(self, wnd, ctrl)
+      if wnd ~= ctrl then return end
+      safecall(func, unpack(self))
+      if dialog then 
+	 dialog:Destroy()
+	 dialog = nil
+      end
+      GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
+      del(info)
+   end
+   t.OnDialogCancel = function(self, wnd, ctrl)
+      if wnd ~= ctrl then return end
+      if dialog then
+	 dialog:Destroy()
+	 dialog = nil
+      end
+      GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
+      del(info)
+   end
+   for i = 1, select("#", ...) do
+      t[i] = select(i, ...) or false
+   end
 end
 
 local function ActivateControl(widget, event, ...)
@@ -775,10 +848,13 @@ local function ActivateControl(widget, event, ...)
 				return
 			end
 		end
-
 		--call the function
 		if type(func) == "string" then
 			if handler and handler[func] then
+			   Event_FireGenericEvent("SendVarToRover", "Handler", handler)
+			   Event_FireGenericEvent("SendVarToRover", "Info'", info)
+			   Event_FireGenericEvent("SendVarToRover", "Extra", {...})
+
 			   safecall(handler[func],handler, info, ...)
 			else
 			   error(format("Method %s doesn't exist in handler for type func", func))

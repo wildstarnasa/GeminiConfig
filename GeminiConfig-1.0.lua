@@ -30,6 +30,7 @@ local dir = string.sub(string.gsub(debug.getinfo(1).source, "^(.+\\)[^\\]+$", "%
 
 loadModule(dir, "GeminiConfigRegistry-1.0")
 loadModule(dir, "GeminiConfigCmd-1.0")
+loadModule(dir, "GeminiConfigGUI-1.0")
 loadModule(dir, "GeminiConfigDialog-1.0")
 
 local APkg = Apollo.GetPackage(MAJOR)
