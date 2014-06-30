@@ -26,7 +26,7 @@ end
 
 -- This gets the current directory of this file, so it also works when embedded
 local strsub, strgsub, debug = string.sub, string.gsub, debug
-local dir = string.sub(string.gsub(debug.getinfo(1).source, "^(.+\\)[^\\]+$", "%1"), 2, -1)
+local dir = string.sub(string.gsub(debug.getinfo(1).source, "^(.+[\\/])[^\\/]+$", "%1"), 2, -1)
 
 loadModule(dir, "GeminiConfigRegistry-1.0")
 loadModule(dir, "GeminiConfigCmd-1.0")
@@ -63,7 +63,7 @@ local pcall, error, type, pairs = pcall, error, type, pairs
 function GeminiConfig:RegisterOptionsTable(appName, options, slashcmd)
    local ok,msg = pcall(cfgreg.RegisterOptionsTable, self, appName, options)
    if not ok then error(msg, 2) end
-   
+
    if slashcmd then
       if type(slashcmd) == "table" then
 	 for _,cmd in pairs(slashcmd) do
