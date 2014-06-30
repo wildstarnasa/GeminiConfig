@@ -150,6 +150,7 @@ local tGeminiCheckBoxDef = {
          Text = "",
          Events = {
             ButtonCheck = "OnButtonClick",
+            ButtonUncheck = "OnButtonClick",
 	    OnMouseEnter = "OnMouseEnter",
 	    OnMouseExit = "OnMouseExit",
          },
