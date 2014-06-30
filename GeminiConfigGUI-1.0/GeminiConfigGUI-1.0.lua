@@ -1,6 +1,6 @@
 --- **Gemini:ConfigGUI-1.0** provides access to numerous widgets which can be used to create GUIs.
 -- GeminiConfigGUI is used by AceConfigDialog to create the option GUIs, but you can use it by itself
--- to create any custom GUI. There are more extensive examples in the test suite in the Ace3 
+-- to create any custom GUI. There are more extensive examples in the test suite in the Ace3
 -- stand-alone distribution.
 --
 -- **Note**: When using Gemini:ConfigGUI-1.0 directly, please do not modify the frames of the widgets directly,
@@ -65,17 +65,17 @@ local function CreateDispatcher(argCount)
 		local xpcall, eh = ...
 		local method, ARGS
 		local function call() return method(ARGS) end
-	
+
 		local function dispatch(func, ...)
 			method = func
 			if not method then return end
 			ARGS = ...
 			return xpcall(call, eh)
 		end
-	
+
 		return dispatch
 	]]
-   
+
    local ARGS = {}
    for i = 1, argCount do ARGS[i] = "arg"..i end
    code = code:gsub("ARGS", tconcat(ARGS, ", "))
@@ -102,7 +102,7 @@ do
    -- Internal Storage of the objects changed, from an array table
    -- to a hash table, and additionally we introduced versioning on
    -- the widgets which would discard all widgets from a pre-29 version
-   -- anyway, so we just clear the storage now, and don't try to 
+   -- anyway, so we just clear the storage now, and don't try to
    -- convert the storage tables to the new format.
    -- This should generally not cause *many* widgets to end up in trash,
    -- since once dialogs are opened, all addons should be loaded already
@@ -112,7 +112,7 @@ do
    if oldminor and oldminor < 29 and GeminiConfigGUI.objPools then
       GeminiConfigGUI.objPools = nil
    end
-   
+
    GeminiConfigGUI.objPools = GeminiConfigGUI.objPools or {}
    local objPools = GeminiConfigGUI.objPools
    --Returns a new instance, if none are available either returns a new table or calls the given contructor
@@ -167,12 +167,12 @@ function GeminiConfigGUI:Create(type, parent)
 	 widget.OnAcquire = widget.Aquire
 	 widget.Aquire = nil
       end
-      
+
       if rawget(widget, "Release") then
-	 widget.OnRelease = rawget(widget, "Release") 
+	 widget.OnRelease = rawget(widget, "Release")
 	 widget.Release = nil
       end
-      
+
       if widget.OnAcquire then
 	 widget:OnAcquire()
       else
@@ -240,18 +240,18 @@ end
 --[[
    Widgets must provide the following functions
    OnAcquire() - Called when the object is acquired, should set everything to a default hidden state
-   
+
    And the following members
    frame - the frame or derivitive object that will be treated as the widget for size and anchoring purposes
    type - the type of the object, same as the name given to :RegisterWidget()
-   
+
    Widgets contain a table called userdata, this is a safe place to store data associated with the wigdet
    It will be cleared automatically when a widget is released
    Placing values directly into a widget object should be avoided
-   
+
    If the Widget can act as a container for other Widgets the following
    content - frame or derivitive that children will be anchored to
-   
+
    The Widget can supply the following Optional Members
    :OnRelease() - Called when the object is Released, should remove any additional anchors and clear any data
    :OnWidthSet(width) - Called when the width of the widget is changed
@@ -267,21 +267,21 @@ end
 -- Widget Base Template --
 --------------------------
 do
-   local WidgetBase = GeminiConfigGUI.WidgetBase 
-   
+   local WidgetBase = GeminiConfigGUI.WidgetBase
+
    WidgetBase.SetParent = function(self, parent)
       local frame = self.frame
       frame:SetParent(nil)
       frame:SetParent(parent.content)
       self.parent = parent
    end
-   
+
    WidgetBase.SetCallback = function(self, name, func)
       if type(func) == "function" then
 	 self.events[name] = func
       end
    end
-   
+
    WidgetBase.Fire = function(self, name, ...)
       if self.events[name] then
 	 local success, ret = safecall(self.events[name], self, name, ...)
@@ -290,7 +290,7 @@ do
 	 end
       end
    end
-   
+
    WidgetBase.SetWidth = function(self, width)
       local left, top, right, bottom = self.frame:GetAnchorOffsets()
       self.frame:SetAnchorOffsets(left, top, left+width, bottom)
@@ -298,7 +298,7 @@ do
 	 self:OnWidthSet(width)
       end
    end
-   
+
    WidgetBase.SetRelativeWidth = function(self, width)
       if width <= 0 or width > 1 then
 	 error(":SetRelativeWidth(width): Invalid relative width.", 2)
@@ -306,7 +306,7 @@ do
       self.relWidth = width
       self.width = "relative"
    end
-   
+
    WidgetBase.SetHeight = function(self, height)
       local left, top, right, bottom = self.frame:GetAnchorOffsets()
       self.frame:SetAnchorOffsets(left, top, right, top + height)
@@ -314,7 +314,7 @@ do
 	 self:OnHeightSet(height)
       end
    end
-   
+
    --[[ WidgetBase.SetRelativeHeight = function(self, height)
       if height <= 0 or height > 1 then
       error(":SetRelativeHeight(height): Invalid relative height.", 2)
@@ -327,47 +327,47 @@ do
    WidgetBase.IsVisible = function(self)
       return self.frame:IsVisible()
    end
-   
+
    WidgetBase.IsShown= function(self)
       return self.frame:IsShown()
    end
-   
+
    WidgetBase.Release = function(self)
       GeminiConfigGUI:Release(self)
    end
-   
+
    WidgetBase.SetPoint = function(self, ...)
       return self.frame:SetPoint(...)
    end
-   
+
    WidgetBase.ClearAllPoints = function(self)
       return self.frame:ClearAllPoints()
    end
-   
+
    WidgetBase.GetNumPoints = function(self)
       return self.frame:GetNumPoints()
    end
-   
+
    WidgetBase.GetPoint = function(self, ...)
       return self.frame:GetPoint(...)
-   end	
-   
+   end
+
    WidgetBase.GetUserDataTable = function(self)
       return self.userdata
    end
-   
+
    WidgetBase.SetUserData = function(self, key, value)
       self.userdata[key] = value
    end
-   
+
    WidgetBase.GetUserData = function(self, key)
       return self.userdata[key]
    end
-   
+
    WidgetBase.IsFullHeight = function(self)
       return self.height == "fill"
    end
-   
+
    WidgetBase.SetFullHeight = function(self, isFull)
       if isFull then
 	 self.height = "fill"
@@ -375,11 +375,11 @@ do
 	 self.height = nil
       end
    end
-   
+
    WidgetBase.IsFullWidth = function(self)
       return self.width == "fill"
    end
-   
+
    WidgetBase.SetFullWidth = function(self, isFull)
       if isFull then
 	 self.width = "fill"
@@ -387,34 +387,34 @@ do
 	 self.width = nil
       end
    end
-   
+
    --	local function LayoutOnUpdate(this)
    --		this:SetScript("OnUpdate",nil)
    --		this.obj:PerformLayout()
    --	end
-   
+
    local WidgetContainerBase = GeminiConfigGUI.WidgetContainerBase
-   
+
    WidgetContainerBase.PauseLayout = function(self)
       self.LayoutPaused = true
    end
-   
+
    WidgetContainerBase.ResumeLayout = function(self)
       self.LayoutPaused = nil
    end
-   
+
    WidgetContainerBase.PerformLayout = function(self)
       if self.LayoutPaused then
 	 return
       end
       safecall(self.LayoutFunc, self.content, self.children)
    end
-   
+
    --call this function to layout, makes sure layed out objects get a frame to get sizes etc
    WidgetContainerBase.DoLayout = function(self)
       self:PerformLayout()
    end
-   
+
    WidgetContainerBase.AddChild = function(self, child, beforeWidget)
       if beforeWidget then
 	 local siblingIndex = 1
@@ -422,7 +422,7 @@ do
 	    if widget == beforeWidget then
 	       break
 	    end
-	    siblingIndex = siblingIndex + 1 
+	    siblingIndex = siblingIndex + 1
 	 end
 	 tinsert(self.children, siblingIndex, child)
       else
@@ -430,7 +430,7 @@ do
       end
       self:DoLayout()
    end
-   
+
    WidgetContainerBase.AddChildren = function(self, ...)
       for i = 1, select("#", ...) do
 	 local child = select(i, ...)
@@ -439,7 +439,7 @@ do
       end
       self:DoLayout()
    end
-   
+
    WidgetContainerBase.ReleaseChildren = function(self)
       local children = self.children
       for i = 1,#children do
@@ -447,7 +447,7 @@ do
 	 children[i] = nil
       end
    end
-   
+
    WidgetContainerBase.SetLayout = function(self, Layout)
       self.LayoutFunc = GeminiConfigGUI:GetLayout(Layout)
    end
@@ -471,7 +471,7 @@ do
 	 end
       end
    end
-   
+
    local function ContentResize(self, this, control)
       if this ~= control then return end
       local w = this:GetWidth()
@@ -486,7 +486,7 @@ do
    setmetatable(WidgetContainerBase, {__index=WidgetBase})
 
    --One of these function should be called on each Widget Instance as part of its creation process
-   
+
    --- Register a widget-class as a container for newly created widgets.
    -- @param widget The widget class
    function GeminiConfigGUI:RegisterAsContainer(widget)
@@ -503,7 +503,7 @@ do
       widget:SetLayout("List")
       return widget
    end
-   
+
    --- Register a widget-class as a widget.
    -- @param widget The widget class
    function GeminiConfigGUI:RegisterAsWidget(widget)
@@ -530,11 +530,11 @@ end
 -- @param Version The version of the widget
 function GeminiConfigGUI:RegisterWidgetType(Name, Constructor, Version)
    assert(type(Constructor) == "function")
-   assert(type(Version) == "number") 
-   
+   assert(type(Version) == "number")
+
    local oldVersion = WidgetVersions[Name]
    if oldVersion and oldVersion >= Version then return end
-   
+
    WidgetVersions[Name] = Version
    WidgetRegistry[Name] = Constructor
 end
@@ -632,7 +632,7 @@ GeminiConfigGUI:RegisterLayout("Flow",
 			 local rowheight = 0
 			 local rowoffset = 0
 			 local lastrowoffset
-			 
+
 			 local width = content:GetWidth()
 --			 Print("Content Width "..width)
 
@@ -641,17 +641,17 @@ GeminiConfigGUI:RegisterLayout("Flow",
 			 local rowstartoffset
 			 local lastrowstart
 			 local isfullheight
-			 
+
 			 local frameoffset
 			 local lastframeoffset
-			 local oversize 
+			 local oversize
 			 for i = 1, #children do
 			    local child = children[i]
 			    oversize = nil
 			    local frame = child.frame
 			    local frameheight = frame:GetHeight() or 0
 			    local framewidth = frame:GetWidth() or 0
-			    
+
 			    frame:Show(true)
 			    local l,t,r,b = frame:GetAnchorPoints()
 			    if l ~= 0 or t ~= 0 or r ~= 0 or b ~= 0 then
@@ -700,18 +700,18 @@ GeminiConfigGUI:RegisterLayout("Flow",
 			       else
 				  --handles cases where the new height is higher than either control because of the offsets
 				  --math.max(rowheight-rowoffset+frameoffset, frameheight-frameoffset+rowoffset)
-				  
+
 				  --offset is always the larger of the two offsets
 				  rowoffset = math_max(rowoffset, frameoffset)
 				  rowheight = math_max(rowheight, rowoffset + (frameheight / 2))
-				  
+
 				  frame:SetAnchorOffsets(usedwidth, height, usedwidth+framewidth,  height+frameheight)
 				  usedwidth = framewidth + usedwidth + 3
 			       end
 			    end
 ----			    Print("child "..i.." height = "..tostring(child.height) ..", width = "..tostring(child.width))
 
-			    if child.width == "fill" then 
+			    if child.width == "fill" then
 --			       Print("Set child "..i.." to fill with width "..width .. " and rowheight "..rowheight)
 			       if not child.AddChild then
 				  safelayoutcall(child, "SetWidth", width-20)
@@ -726,7 +726,7 @@ GeminiConfigGUI:RegisterLayout("Flow",
 			       rowstartoffset = rowoffset
 			    elseif child.width == "relative" then
 			       safelayoutcall(child, "SetWidth", width * child.relWidth)
---			       Print("child "..i.." is relative width")		       
+--			       Print("child "..i.." is relative width")
 			       if child.DoLayout then
 				  child:DoLayout()
 			       end
@@ -744,13 +744,13 @@ GeminiConfigGUI:RegisterLayout("Flow",
 			       frame:SetAnchorOffsets(left, top, right, 0)
 			    end
 			 end
-			 
+
 			 if isfullheight then
 --			    rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -height)
 			 elseif rowstart then
 			    --rowstart:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(height + (rowoffset - rowstartoffset) + 3))
 			 end
-			 
+
 			 height = height + rowheight + 3
 			 safecall(content:GetData().LayoutFinished, content:GetData(), nil, height)
 end)
@@ -782,13 +782,12 @@ local widgets = {
 }
 
 local strsub, strgsub, debug = string.sub, string.gsub, debug
-local dir = string.sub(string.gsub(debug.getinfo(1).source, "^(.+\\)[^\\]+$", "%1"), 2, -1).."widgets\\"
+local dir = string.sub(string.gsub(debug.getinfo(1).source, "^(.+[\\/])[^\\/]+$", "%1"), 2, -1).."widgets\\"
 
 -- load all the widget files
 for _,mod in ipairs(widgets) do
-   local func = assert(loadfile(dir..mod))
-   if func then
-      xpcall(func, errorhandler)
-   end
+  local func = assert(loadfile(dir..mod))
+  if func then
+    xpcall(func, errorhandler)
+  end
 end
-
