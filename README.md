@@ -17,15 +17,15 @@ This addon requires the following libraries to be loaded:
 Simple usage
 =============
 
-Registering a config table: 
-
+Registering a config table:
+```Lua
   local GeminiConfig = Apollo.GetPackage("Gemini:Config-1.0").tPackage
-  GeminiConfig:RegisterOptionsTable(strAddonNAme, tConfigOptions, strSlashName | tSlashNames | nil)
-
+  GeminiConfig:RegisterOptionsTable(strAddonNAme, tConfigOptions[, strSlashName | tSlashNames])
+```
 Opening a config dialog:
-
+```Lua
   Apollo.GetPackage("Gemini:ConfigDialog-1.0").tPackage:Open(strAddonName)
-
+```
 For details on the option table format, please refer to the AceConfig documentation:
 
 http://www.wowace.com/addons/ace3/pages/ace-config-3-0-options-tables/
