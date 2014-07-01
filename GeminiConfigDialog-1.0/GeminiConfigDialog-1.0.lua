@@ -1,3 +1,4 @@
+-- -*- lua-indent-level: 4; -*-
 --- GeminiConfigDialog-1.0 generates Gemini:ConfigGUI-1.0 based windows based on option tables.
 
 local MAJOR, MINOR = "Gemini:ConfigDialog-1.0", 1
@@ -26,11 +27,10 @@ local pairs, next, select, type, unpack, wipe, ipairs = pairs, next, select, typ
 local rawset, tostring, tonumber = rawset, tostring, tonumber
 local math_min, math_max, math_floor = math.min, math.max, math.floor
 
-
 local emptyTbl = {}
 
 --[[
-	 xpcall safecall implementation
+	xpcall safecall implementation
 ]]
 local xpcall = xpcall
 local tLibError = Apollo.GetPackage("Gemini:LibError-1.0")
@@ -40,17 +40,17 @@ local function CreateDispatcher(argCount)
 		local xpcall, eh = ...
 		local method, ARGS
 		local function call() return method(ARGS) end
-	
+
 		local function dispatch(func, ...)
-			 method = func
-			 if not method then return end
-			 ARGS = ...
-			 return xpcall(call, eh)
+			method = func
+			if not method then return end
+			ARGS = ...
+			return xpcall(call, eh)
 		end
-	
+
 		return dispatch
 	]]
-	
+
 	local ARGS = {}
 	for i = 1, argCount do ARGS[i] = "arg"..i end
 	code = code:gsub("ARGS", tconcat(ARGS, ", "))
@@ -58,14 +58,15 @@ local function CreateDispatcher(argCount)
 end
 
 local Dispatchers = setmetatable({}, {__index=function(self, argCount)
-	local dispatcher = CreateDispatcher(argCount)
-	rawset(self, argCount, dispatcher)
-	return dispatcher
+ local dispatcher = CreateDispatcher(argCount)
+ rawset(self, argCount, dispatcher)
+ return dispatcher
 end})
+
 Dispatchers[0] = function(func)
 	return xpcall(func, errorhandler)
 end
- 
+
 local function safecall(func, ...)
 	return Dispatchers[select("#", ...)](func, ...)
 end
@@ -74,21 +75,19 @@ local width_multiplier = 220
 
 --[[
 Group Types
-  Tree 	- All Descendant Groups will all become nodes on the tree, direct child options will appear above the tree
-  		- Descendant Groups with inline=true and thier children will not become nodes
+	Tree - All Descendant Groups will all become nodes on the tree, direct child options will appear above the tree
+		- Descendant Groups with inline=true and thier children will not become nodes
 
-  Tab	- Direct Child Groups will become tabs, direct child options will appear above the tab control
-  		- Grandchild groups will default to inline unless specified otherwise
+	Tab - Direct Child Groups will become tabs, direct child options will appear above the tab control
+		- Grandchild groups will default to inline unless specified otherwise
 
-  Select- Same as Tab but with entries in a dropdown rather than tabs
+	Select- Same as Tab but with entries in a dropdown rather than tabs
 
-
-  Inline Groups
-  	- Will not become nodes of a select group, they will be effectivly part of thier parent group seperated by a border
-  	- If declared on a direct child of a root node of a select group, they will appear above the group container control
-  	- When a group is displayed inline, all descendants will also be inline members of the group
-
-]]
+	Inline Groups
+		- Will not become nodes of a select group, they will be effectivly part of thier parent group seperated by a border
+		- If declared on a direct child of a root node of a select group, they will appear above the group container control
+		- When a group is displayed inline, all descendants will also be inline members of the group
+--]]
 
 -- Recycling functions
 local new, del, copy
@@ -115,25 +114,25 @@ do
 	end
 	function del(t)
 		--delcount = delcount + 1
---		wipe(t)
---		pool[t] = true
+		-- wipe(t)
+		-- pool[t] = true
 	end
---	function cached()
---		local n = 0
---		for k in pairs(pool) do
---			n = n + 1
---		end
---		return n
---	end
+	-- function cached()
+	-- local n = 0
+	-- for k in pairs(pool) do
+	-- n = n + 1
+	-- end
+	-- return n
+	-- end
 end
 
 -- picks the first non-nil value and returns it
 local function pickfirstset(...)
-  for i=1,select("#",...) do
-    if select(i,...)~=nil then
-      return select(i,...)
-    end
-  end
+	for i=1,select("#",...) do
+		if select(i,...)~=nil then
+			return select(i,...)
+		end
+	end
 end
 
 --gets an option from a given group, checking plugins
@@ -187,11 +186,10 @@ local allIsLiteral = {
 local function GetOptionsMemberValue(membername, option, options, path, appName, ...)
 	--get definition for the member
 	local inherits = isInherited[membername]
-	
 
 	--get the member of the option, traversing the tree if it can be inherited
 	local member
-	
+
 	if inherits then
 		local group = options
 		if group[membername] ~= nil then
@@ -206,7 +204,7 @@ local function GetOptionsMemberValue(membername, option, options, path, appName,
 	else
 		member = option[membername]
 	end
-	
+
 	--check if we need to call a functon, or if we have a literal value
 	if ( not allIsLiteral[membername] ) and ( type(member) == "function" or ((not stringIsLiteral[membername]) and type(member) == "string") ) then
 		--We have a function to call
@@ -215,13 +213,13 @@ local function GetOptionsMemberValue(membername, option, options, path, appName,
 		local handler
 		local group = options
 		handler = group.handler or handler
-		
+
 		for i = 1, #path do
 			group = GetSubOption(group, path[i])
 			info[i] = path[i]
 			handler = group.handler or handler
 		end
-		
+
 		info.options = options
 		info.appName = appName
 		info[0] = appName
@@ -231,8 +229,8 @@ local function GetOptionsMemberValue(membername, option, options, path, appName,
 		info.type = option.type
 		info.uiType = "dialog"
 		info.uiName = MAJOR
-	
-		local a, b, c ,d 
+
+		local a, b, c ,d
 		--using 4 returns for the get of a color type, increase if a type needs more
 		if type(member) == "function" then
 			--Call the function
@@ -249,8 +247,8 @@ local function GetOptionsMemberValue(membername, option, options, path, appName,
 		return a,b,c,d
 	else
 		--The value isnt a function to call, return it
-		return member	
-	end	
+		return member
+	end
 end
 
 --[[calls an options function that could be inherited, method name or function ref
@@ -272,7 +270,7 @@ local function CallOptionsFunction(funcname ,option, options, path, appName, ...
 		group = GetSubOption(group, v)
 		info[i] = v
 		if group[funcname] ~= nil then
-			func =  group[funcname]
+			func = group[funcname]
 		end
 		handler = group.handler or handler
 	end
@@ -326,15 +324,13 @@ local function compareOptions(a,b)
 	return OrderA < OrderB
 end
 
-
-
 --builds 2 tables out of an options group
 -- keySort, sorted keys
 -- opts, combined options from .plugins and args
 local function BuildSortedOptionsTable(group, keySort, opts, options, path, appName)
 	tempOrders = new()
 	tempNames = new()
-	
+
 	if group.plugins then
 		for plugin, t in pairs(group.plugins) do
 			for k, v in pairs(t) do
@@ -350,7 +346,7 @@ local function BuildSortedOptionsTable(group, keySort, opts, options, path, appN
 			end
 		end
 	end
-	
+
 	for k, v in pairs(group.args) do
 		if not opts[k] then
 			tinsert(keySort, k)
@@ -381,7 +377,6 @@ local function DelTree(tree)
 end
 
 local function CleanUserData(widget, event)
-	
 	local user = widget:GetUserDataTable()
 
 	if user.path then
@@ -418,10 +413,10 @@ local function CleanUserData(widget, event)
 	end
 end
 
--- - Gets a status table for the given appname and options path.
+--- Gets a status table for the given appname and options path.
 -- @param appName The application name as given to `:RegisterOptionsTable()`
 -- @param path The path to the options (a table with all group keys)
--- @return 
+-- @return
 function GeminiConfigDialog:GetStatusTable(appName, path)
 	local status = self.Status
 
@@ -455,7 +450,6 @@ end
 function GeminiConfigDialog:SelectGroup(appName, ...)
 	local path = new()
 
-	
 	local app = reg:GetOptionsTable(appName)
 	if not app then
 		error(("%s isn't registed with GeminiConfigRegistry, unable to open config"):format(appName), 2)
@@ -467,9 +461,9 @@ function GeminiConfigDialog:SelectGroup(appName, ...)
 		status.groups = {}
 	end
 	status = status.groups
-	local treevalue 
-	local treestatus 
-	
+	local treevalue
+	local treestatus
+
 	for n = 1, select("#",...) do
 		local key = select(n, ...)
 
@@ -496,12 +490,11 @@ function GeminiConfigDialog:SelectGroup(appName, ...)
 			--the selected group will be overwritten if a child is the final target but still needs to be open
 			treestatus.selected = treevalue
 			treestatus.groups[treevalue] = true
-			
 		end
-		
+
 		--move to the next group in the path
 		group = GetSubOption(group, key)
-		if not group then 
+		if not group then
 			break
 		end
 		tinsert(path, key)
@@ -511,10 +504,10 @@ function GeminiConfigDialog:SelectGroup(appName, ...)
 		end
 		status = status.groups
 	end
-	
+
 	del(path)
 	reg:NotifyChange(appName)
-end	
+end
 
 local function OptionOnMouseOver(widget, event)
 	--show a tooltip/set the status bar to the desc text
@@ -528,19 +521,19 @@ local function OptionOnMouseOver(widget, event)
 	local desc = GetOptionsMemberValue("desc", opt, options, path, appName)
 	local usage = GetOptionsMemberValue("usage", opt, options, path, appName)
 	local descStyle = opt.descStyle
-	
+
 	if descStyle and descStyle ~= "tooltip" then return end
 	local text = "<P TextColor=\"ffff9f00\">"..name.."</P>"
-	
+
 	if opt.type == "multiselect" then
 		text = text .. "<P TextColor=\"ff7f7fcf\">"..user.text.."</P>"
-	end	
+	end
 	if type(desc) == "string" then
 		text = text .. "<P TextColor=\"ffffffff\">"..desc.."</P>"
 	end
 	if type(usage) == "string" then
 		text = text .. "<P TextColor=\"ffffffff\">Usage: "..usage.."</P>"
---		GameTooltip:AddLine("Usage: "..usage, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
+		-- GameTooltip:AddLine("Usage: "..usage, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1)
 	end
 	widget.frame:SetTooltip(text)
 end
@@ -558,118 +551,118 @@ local function GetFuncName(option)
 	end
 end
 local tGeminiConfirmDialogDef = {
-   AnchorOffsets = { -210, -120, 210, 120 },
-   AnchorPoints = "CENTER",
-   RelativeToClient = true, 
-   Font = "CRB_HeaderGigantic", 
-   BGColor = "UI_WindowBGDefault", 
-   TextColor = "UI_WindowTextDefault", 
-   Template = "CRB_NormalFramedThick", 
-   Name = "GeminiConfirmDialog", 
-   Border = true, 
-   Picture = true, 
-   SwallowMouseClicks = true, 
-   Moveable = true, 
-   Escapable = true, 
-   Overlapped = true, 
-   UseTemplateBG = true, 
-   DT_VCENTER = true, 
-   DT_CENTER = true, 
-   DT_WORDBREAK = true, 
-   Events = {
-      WindowKeyEscape = "OnDialogCancel",
-   },
-   Children = {
-      {
-         AnchorOffsets = { 40, -89, 196, -9 },
-         AnchorPoints = "BOTTOMLEFT",
-         Class = "Button", 
-         Base = "BK3:btnHolo_Blue_Med", 
-         Font = "CRB_HeaderHuge", 
-         ButtonType = "PushButton", 
-         DT_VCENTER = true, 
-         DT_CENTER = true, 
-         BGColor = "UI_BtnBGDefault", 
-         TextColor = "UI_BtnTextDefault", 
-         NormalTextColor = "UI_BtnTextDefault", 
-         PressedTextColor = "UI_BtnTextDefault", 
-         FlybyTextColor = "UI_BtnTextDefault", 
-         PressedFlybyTextColor = "UI_BtnTextDefault", 
-         DisabledTextColor = "UI_BtnTextDefault", 
-         Name = "Accept", 
-         TextId = "CRB_Accept", 
-         Events = {
-            ButtonSignal = "OnDialogAccept",
-         },
-      },
-      {
-         AnchorOffsets = { -196, -89, -40, -9 },
-         AnchorPoints = "BOTTOMRIGHT",
-         Class = "Button", 
-         Base = "BK3:btnHolo_Red_Med", 
-         Font = "CRB_HeaderHuge", 
-         ButtonType = "PushButton", 
-         DT_VCENTER = true, 
-         DT_CENTER = true, 
-         BGColor = "UI_BtnBGDefault", 
-         TextColor = "UI_BtnTextDefault", 
-         NormalTextColor = "UI_BtnTextDefault", 
-         PressedTextColor = "UI_BtnTextDefault", 
-         FlybyTextColor = "UI_BtnTextDefault", 
-         PressedFlybyTextColor = "UI_BtnTextDefault", 
-         DisabledTextColor = "UI_BtnTextDefault", 
-         Name = "Cancel", 
-         TextId = "Launcher_Cancel", 
-         Events = {
-            ButtonSignal = "OnDialogCancel",
-         },
-      },
-      {
-         AnchorOffsets = { 15, 15, -15, -80 },
-         AnchorPoints = "FILL",
-         RelativeToClient = true, 
-         Font = "CRB_HeaderLarge", 
-         Text = "Are you really sure that you want to do that Dave?", 
-         BGColor = "UI_WindowBGDefault", 
-         TextColor = "UI_WindowTextDefault", 
-         Name = "Contents", 
-         DT_VCENTER = true, 
-         DT_CENTER = true, 
-         DT_WORDBREAK = true, 
-         IgnoreMouse = true, 
-         NewWindowDepth = 1, 
-      },
-   },
+	AnchorOffsets = { -210, -120, 210, 120 },
+	AnchorPoints = "CENTER",
+	RelativeToClient = true,
+	Font = "CRB_HeaderGigantic",
+	BGColor = "UI_WindowBGDefault",
+	TextColor = "UI_WindowTextDefault",
+	Template = "CRB_NormalFramedThick",
+	Name = "GeminiConfirmDialog",
+	Border = true,
+	Picture = true,
+	SwallowMouseClicks = true,
+	Moveable = true,
+	Escapable = true,
+	Overlapped = true,
+	UseTemplateBG = true,
+	DT_VCENTER = true,
+	DT_CENTER = true,
+	DT_WORDBREAK = true,
+	Events = {
+		WindowKeyEscape = "OnDialogCancel",
+	},
+	Children = {
+		{
+			AnchorOffsets = { 40, -89, 196, -9 },
+			AnchorPoints = "BOTTOMLEFT",
+			Class = "Button",
+			Base = "BK3:btnHolo_Blue_Med",
+			Font = "CRB_HeaderHuge",
+			ButtonType = "PushButton",
+			DT_VCENTER = true,
+			DT_CENTER = true,
+			BGColor = "UI_BtnBGDefault",
+			TextColor = "UI_BtnTextDefault",
+			NormalTextColor = "UI_BtnTextDefault",
+			PressedTextColor = "UI_BtnTextDefault",
+			FlybyTextColor = "UI_BtnTextDefault",
+			PressedFlybyTextColor = "UI_BtnTextDefault",
+			DisabledTextColor = "UI_BtnTextDefault",
+			Name = "Accept",
+			TextId = "CRB_Accept",
+			Events = {
+				ButtonSignal = "OnDialogAccept",
+			},
+		},
+		{
+			AnchorOffsets = { -196, -89, -40, -9 },
+			AnchorPoints = "BOTTOMRIGHT",
+			Class = "Button",
+			Base = "BK3:btnHolo_Red_Med",
+			Font = "CRB_HeaderHuge",
+			ButtonType = "PushButton",
+			DT_VCENTER = true,
+			DT_CENTER = true,
+			BGColor = "UI_BtnBGDefault",
+			TextColor = "UI_BtnTextDefault",
+			NormalTextColor = "UI_BtnTextDefault",
+			PressedTextColor = "UI_BtnTextDefault",
+			FlybyTextColor = "UI_BtnTextDefault",
+			PressedFlybyTextColor = "UI_BtnTextDefault",
+			DisabledTextColor = "UI_BtnTextDefault",
+			Name = "Cancel",
+			TextId = "Launcher_Cancel",
+			Events = {
+				ButtonSignal = "OnDialogCancel",
+			},
+		},
+		{
+			AnchorOffsets = { 15, 15, -15, -80 },
+			AnchorPoints = "FILL",
+			RelativeToClient = true,
+			Font = "CRB_HeaderLarge",
+			Text = "Are you really sure that you want to do that Dave?",
+			BGColor = "UI_WindowBGDefault",
+			TextColor = "UI_WindowTextDefault",
+			Name = "Contents",
+			DT_VCENTER = true,
+			DT_CENTER = true,
+			DT_WORDBREAK = true,
+			IgnoreMouse = true,
+			NewWindowDepth = 1,
+		},
+	},
 }
 
 local function confirmPopup(appName, rootframe, basepath, info, message, func, ...)
-   local t = {}
-   
-   local dialog = Apollo.GetPackage("Gemini:GUI-1.0").tPackage:Create(tGeminiConfirmDialogDef):GetInstance(t)
-   dialog:FindChild("Contents"):SetText(message)
-   
-   t.OnDialogAccept = function(self, wnd, ctrl)
-      if wnd ~= ctrl then return end
-      safecall(func, unpack(self))
-      if dialog then 
-	 dialog:Destroy()
-	 dialog = nil
-      end
-      GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
-      del(info)
-   end
-   t.OnDialogCancel = function(self, wnd, ctrl)
-      if wnd ~= ctrl then return end
-      if dialog then
-	 dialog:Destroy()
-	 dialog = nil
-      end
-      GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
-      del(info)
-   end
-   for i = 1, select("#", ...) do
-      t[i] = select(i, ...) or false
-   end
+	local t = {}
+
+	local dialog = Apollo.GetPackage("Gemini:GUI-1.0").tPackage:Create(tGeminiConfirmDialogDef):GetInstance(t)
+	dialog:FindChild("Contents"):SetText(message)
+
+	t.OnDialogAccept = function(self, wnd, ctrl)
+		if wnd ~= ctrl then return end
+		safecall(func, unpack(self))
+		if dialog then
+			dialog:Destroy()
+			dialog = nil
+		end
+		GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
+		del(info)
+	end
+	t.OnDialogCancel = function(self, wnd, ctrl)
+		if wnd ~= ctrl then return end
+		if dialog then
+			dialog:Destroy()
+			dialog = nil
+		end
+		GeminiConfigDialog:Open(appName, rootframe, unpack(basepath or emptyTbl))
+		del(info)
+	end
+	for i = 1, select("#", ...) do
+		t[i] = select(i, ...) or false
+	end
 end
 
 local function ActivateControl(widget, event, ...)
@@ -690,7 +683,7 @@ local function ActivateControl(widget, event, ...)
 	--build the info table containing the path
 	-- pick up functions while traversing the tree
 	if group[funcname] ~= nil then
-		func =  group[funcname]
+		func = group[funcname]
 	end
 	handler = group.handler or handler
 	confirm = group.confirm
@@ -700,7 +693,7 @@ local function ActivateControl(widget, event, ...)
 		group = GetSubOption(group, v)
 		info[i] = v
 		if group[funcname] ~= nil then
-			func =  group[funcname]
+			func = group[funcname]
 		end
 		handler = group.handler or handler
 		if group.confirm ~= nil then
@@ -740,7 +733,7 @@ local function ActivateControl(widget, event, ...)
 			end
 		end
 	end
-	
+
 	local success
 	if validated and option.type ~= "execute" then
 		if type(validate) == "string" then
@@ -755,7 +748,7 @@ local function ActivateControl(widget, event, ...)
 			if not success then validated = false end
 		end
 	end
-	
+
 	local rootframe = user.rootframe
 	if type(validated) == "string" then
 		--validate function returned a message to display
@@ -768,7 +761,7 @@ local function ActivateControl(widget, event, ...)
 		del(info)
 		return true
 	elseif not validated then
-		--validate returned false	
+		--validate returned false
 		if rootframe.SetStatusText then
 			if usage then
 				rootframe:SetStatusText(name..": "..usage)
@@ -786,7 +779,7 @@ local function ActivateControl(widget, event, ...)
 		del(info)
 		return true
 	else
-		
+
 		local confirmText = option.confirmText
 		--call confirm func/method
 		if type(confirm) == "string" then
@@ -827,10 +820,10 @@ local function ActivateControl(widget, event, ...)
 						confirmText = confirmText.." - "..desc
 					end
 				end
-				
+
 				local iscustom = user.rootframe:GetUserData("iscustom")
 				local rootframe
-				
+
 				if iscustom then
 					rootframe = user.rootframe
 				end
@@ -851,22 +844,20 @@ local function ActivateControl(widget, event, ...)
 		--call the function
 		if type(func) == "string" then
 			if handler and handler[func] then
-			   safecall(handler[func],handler, info, ...)
+				safecall(handler[func],handler, info, ...)
 			else
-			   error(format("Method %s doesn't exist in handler for type func", func))
+				error(format("Method %s doesn't exist in handler for type func", func))
 			end
 		elseif type(func) == "function" then
 			safecall(func,info, ...)
 		end
-
-
 
 		local iscustom = user.rootframe:GetUserData("iscustom")
 		local basepath = user.rootframe:GetUserData("basepath") or emptyTbl
 		--full refresh of the frame, some controls dont cause this on all events
 		if option.type == "color" then
 			if event == "OnValueConfirmed" then
-				
+
 				if iscustom then
 					GeminiConfigDialog:Open(user.appName, user.rootframe, unpack(basepath))
 				else
@@ -881,7 +872,7 @@ local function ActivateControl(widget, event, ...)
 					GeminiConfigDialog:Open(user.appName, unpack(basepath))
 				end
 			end
-		--multiselects don't cause a refresh on 'OnValueChanged' only 'OnClosed'
+			--multiselects don't cause a refresh on 'OnValueChanged' only 'OnClosed'
 		elseif option.type == "multiselect" then
 			user.valuechanged = true
 		else
@@ -1104,7 +1095,6 @@ local function InjectInfo(control, options, option, path, rootframe, appName)
 	control:SetCallback("OnEnter", OptionOnMouseOver)
 end
 
-
 --[[
 	options - root of the options table being fed
 	container - widget that controls will be placed in
@@ -1124,7 +1114,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 		tinsert(path, k)
 		local hidden = CheckOptionHidden(v, options, path, appName)
 		local name = GetOptionsMemberValue("name", v, options, path, appName)
-		if not hidden then 
+		if not hidden then
 			if v.type == "group" then
 				if inline or pickfirstset(v.dialogInline,v.guiInline,v.inline, false) then
 					--Inline group
@@ -1135,7 +1125,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					else
 						GroupContainer = gui:Create("SimpleGroup", container)
 					end
-					
+
 					GroupContainer.width = "fill"
 					GroupContainer:SetLayout("flow")
 					container:AddChild(GroupContainer)
@@ -1144,14 +1134,14 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 			else
 				--Control to feed
 				local control
-				
+
 				local name = GetOptionsMemberValue("name", v, options, path, appName)
-				
+
 				if v.type == "execute" then
-					
+
 					local imageCoords = GetOptionsMemberValue("imageCoords",v, options, path, appName)
 					local image, width, height = GetOptionsMemberValue("image",v, options, path, appName)
-					
+
 					if type(image) == "string" then
 						control = gui:Create("Icon", container)
 						if not width then
@@ -1186,7 +1176,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						errorhandler(("Invalid Custom Control Type - %s"):format(tostring(controlType)))
 						control = gui:Create(v.multiline and "MultiLineEditBox" or "EditBox", container)
 					end
-					
+
 					if v.multiline and control.SetNumLines then
 						control:SetNumLines(tonumber(v.multiline) or 4)
 					end
@@ -1205,15 +1195,15 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					local value = GetOptionsMemberValue("get",v, options, path, appName)
 					control:SetValue(value)
 					control:SetCallback("OnValueChanged",ActivateControl)
-					
+
 					if v.descStyle == "inline" then
 						local desc = GetOptionsMemberValue("desc", v, options, path, appName)
 						control:SetDescription(desc)
 					end
-					
+
 					local image = GetOptionsMemberValue("image", v, options, path, appName)
 					local imageCoords = GetOptionsMemberValue("imageCoords", v, options, path, appName)
-					
+
 					if type(image) == "string" then
 						if type(imageCoords) == "table" then
 							control:SetImage(image, unpack(imageCoords))
@@ -1300,9 +1290,9 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 				elseif v.type == "multiselect" then
 					local values = GetOptionsMemberValue("values", v, options, path, appName)
 					local disabled = CheckOptionDisabled(v, options, path, appName)
-					
+
 					local controlType = v.dialogControl or v.control
-					
+
 					local valuesort = new()
 					if values then
 						for value, text in pairs(values) do
@@ -1310,7 +1300,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						end
 					end
 					tsort(valuesort)
-					
+
 					if controlType then
 						control = gui:Create(controlType, container)
 						if not control then
@@ -1374,9 +1364,8 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 						control:ResumeLayout()
 						control:DoLayout()
 
-						
 					end
-					
+
 					del(valuesort)
 
 				elseif v.type == "color" then
@@ -1401,19 +1390,19 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 				elseif v.type == "description" then
 					control = gui:Create("Label", container)
 					control:SetText(name)
-					
+
 					local fontSize = GetOptionsMemberValue("fontSize",v, options, path, appName)
 					if fontSize == "medium" then
-					   control:SetFont("CRB_InterfaceMedium")
+						control:SetFont("CRB_InterfaceMedium")
 					elseif fontSize == "large" then
-					   control:SetFont("CRB_InterfaceLarge")
+						control:SetFont("CRB_InterfaceLarge")
 					else -- small or invalid
-					   control:SetFont("CRB_InterfaceSmall")
+						control:SetFont("CRB_InterfaceSmall")
 					end
-					
+
 					local imageCoords = GetOptionsMemberValue("imageCoords",v, options, path, appName)
 					local image, width, height = GetOptionsMemberValue("image",v, options, path, appName)
-					
+
 					if type(image) == "string" then
 						if not width then
 							width = GetOptionsMemberValue("imageWidth",v, options, path, appName)
@@ -1460,7 +1449,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 					InjectInfo(control, options, v, path, rootframe, appName)
 					container:AddChild(control)
 				end
-				
+
 			end
 		end
 		tremove(path)
@@ -1472,11 +1461,10 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 end
 
 local function BuildPath(path, ...)
-	for i = 1, select("#",...)  do
+	for i = 1, select("#",...) do
 		tinsert(path, (select(i,...)))
 	end
 end
-
 
 local function TreeOnButtonEnter(widget, event, uniquevalue, button)
 	local user = widget:GetUserDataTable()
@@ -1485,7 +1473,7 @@ local function TreeOnButtonEnter(widget, event, uniquevalue, button)
 	local option = user.option
 	local path = user.path
 	local appName = user.appName
-	
+
 	local feedpath = new()
 	for i = 1, #path do
 		feedpath[i] = path[i]
@@ -1500,7 +1488,7 @@ local function TreeOnButtonEnter(widget, event, uniquevalue, button)
 
 	local name = GetOptionsMemberValue("name", group, options, feedpath, appName)
 	local desc = GetOptionsMemberValue("desc", group, options, feedpath, appName)
-	
+
 	GameTooltip:SetOwner(button, "ANCHOR_NONE")
 	if widget.type == "TabGroup" then
 		GameTooltip:SetPoint("BOTTOM",button,"TOP")
@@ -1509,11 +1497,11 @@ local function TreeOnButtonEnter(widget, event, uniquevalue, button)
 	end
 
 	GameTooltip:SetText(name, 1, .82, 0, 1)
-	
+
 	if type(desc) == "string" then
 		GameTooltip:AddLine(desc, 1, 1, 1, 1)
 	end
-	
+
 	GameTooltip:Show()
 end
 
@@ -1521,28 +1509,27 @@ local function TreeOnButtonLeave(widget, event, value, button)
 	GameTooltip:Hide()
 end
 
-
 local function GroupExists(appName, options, path, uniquevalue)
 	if not uniquevalue then return false end
-	
+
 	local feedpath = new()
 	local temppath = new()
 	for i = 1, #path do
 		feedpath[i] = path[i]
 	end
-	
+
 	BuildPath(feedpath, gui:split(uniquevalue, "\001"))
-	
+
 	local group = options
 	for i = 1, #feedpath do
 		local v = feedpath[i]
 		temppath[i] = v
 		group = GetSubOption(group, v)
-		
-		if not group or group.type ~= "group" or CheckOptionHidden(group, options, temppath, appName) then 
+
+		if not group or group.type ~= "group" or CheckOptionHidden(group, options, temppath, appName) then
 			del(feedpath)
 			del(temppath)
-			return false 
+			return false
 		end
 	end
 	del(feedpath)
@@ -1575,8 +1562,6 @@ local function GroupSelected(widget, event, uniquevalue)
 	del(feedpath)
 end
 
-
-
 --[[
 -- INTERNAL --
 This function will feed one group, and any inline child groups into the given container
@@ -1584,13 +1569,13 @@ Select Groups will only have the selection control (tree, tabs, dropdown) fed in
 and have a group selected, this event will trigger the feeding of child groups
 
 Rules:
-	If the group is Inline, FeedOptions
-	If the group has no child groups, FeedOptions
+ If the group is Inline, FeedOptions
+ If the group has no child groups, FeedOptions
 
-	If the group is a tab or select group, FeedOptions then add the Group Control
-	If the group is a tree group FeedOptions then
-		its parent isnt a tree group:  then add the tree control containing this and all child tree groups
-		if its parent is a tree group, its already a node on a tree
+ If the group is a tab or select group, FeedOptions then add the Group Control
+ If the group is a tree group FeedOptions then
+ 	its parent isnt a tree group: then add the tree control containing this and all child tree groups
+	if its parent is a tree group, its already a node on a tree
 --]]
 
 function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, isRoot)
@@ -1598,7 +1583,6 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 	--follow the path to get to the curent group
 	local inline
 	local grouptype, parenttype = options.childGroups, "none"
-
 
 	for i = 1, #path do
 		local v = path[i]
@@ -1665,7 +1649,7 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 			tab:SetCallback("OnGroupSelected", GroupSelected)
 			tab:SetCallback("OnTabEnter", TreeOnButtonEnter)
 			tab:SetCallback("OnTabLeave", TreeOnButtonLeave)
-			
+
 			local status = GeminiConfigDialog:GetStatusTable(appName, path)
 			if not status.groups then
 				status.groups = {}
@@ -1686,7 +1670,7 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 				end
 			end
 			container:AddChild(tab)
-			
+
 		elseif grouptype == "select" then
 
 			local select = gui:Create("DropdownGroup", container)
@@ -1707,25 +1691,25 @@ function GeminiConfigDialog:FeedGroup(appName,options,container,rootframe,path, 
 			if firstgroup then
 				select:SetGroup((GroupExists(appName, options, path,status.groups.selected) and status.groups.selected) or firstgroup)
 			end
-			
+
 			select.width = "fill"
 			select.height = "fill"
 			container:AddChild(select)
 
-		--assume tree group by default
-		--if parenttype is tree then this group is already a node on that tree
+			--assume tree group by default
+			--if parenttype is tree then this group is already a node on that tree
 		elseif (parenttype ~= "tree") or isRoot then
 			local tree = gui:Create("TreeGroup", container)
 			InjectInfo(tree, options, group, path, rootframe, appName)
 			tree:EnableButtonTooltips(false)
-			
+
 			tree.width = "fill"
 			tree.height = "fill"
 
 			tree:SetCallback("OnGroupSelected", GroupSelected)
 			tree:SetCallback("OnButtonEnter", TreeOnButtonEnter)
 			tree:SetCallback("OnButtonLeave", TreeOnButtonLeave)
-			
+
 			local status = GeminiConfigDialog:GetStatusTable(appName, path)
 			if not status.groups then
 				status.groups = {}
@@ -1752,7 +1736,6 @@ end
 
 local old_CloseSpecialWindows
 
-
 local function RefreshOnUpdate(this)
 	for appName in pairs(this.closing) do
 		if GeminiConfigDialog.OpenFrames[appName] then
@@ -1767,7 +1750,7 @@ local function RefreshOnUpdate(this)
 		end
 		this.closing[appName] = nil
 	end
-	
+
 	if this.closeAll then
 		for k, v in pairs(GeminiConfigDialog.OpenFrames) do
 			if not this.closeAllOverride[k] then
@@ -1777,7 +1760,7 @@ local function RefreshOnUpdate(this)
 		this.closeAll = nil
 		wipe(this.closeAllOverride)
 	end
-	
+
 	for appName in pairs(this.apps) do
 		if GeminiConfigDialog.OpenFrames[appName] then
 			local user = GeminiConfigDialog.OpenFrames[appName]:GetUserDataTable()
@@ -1798,7 +1781,7 @@ end
 
 -- Upgrade the OnUpdate script as well, if needed.
 --if GeminiConfigDialog.frame:GetScript("OnUpdate") then
---	GeminiConfigDialog.frame:SetScript("OnUpdate", RefreshOnUpdate)
+-- GeminiConfigDialog.frame:SetScript("OnUpdate", RefreshOnUpdate)
 --end
 
 --- Close all open options windows
@@ -1827,7 +1810,7 @@ function GeminiConfigDialog:ConfigTableChanged(event, appName)
 end
 
 function GeminiConfigDialog:OnLoad()
-   --reg.RegisterCallback(GeminiConfigDialog, "ConfigTableChange", "ConfigTableChanged")
+	--reg.RegisterCallback(GeminiConfigDialog, "ConfigTableChange", "ConfigTableChanged")
 end
 
 --- Sets the default size of the options window for a specific application.
@@ -1850,13 +1833,6 @@ end
 -- @param container An optional container frame to feed the options into
 -- @param ... The path to open after creating the options window (see `:SelectGroup` for details)
 function GeminiConfigDialog:Open(appName, container, ...)
-	if not old_CloseSpecialWindows then
-		old_CloseSpecialWindows = CloseSpecialWindows
-		CloseSpecialWindows = function()
-			local found = old_CloseSpecialWindows()
-			return self:CloseAll() or found
-		end
-	end
 	local app = reg:GetOptionsTable(appName)
 	if not app then
 		error(("%s isn't registed with GeminiConfigRegistry, unable to open config"):format(appName), 2)
@@ -1864,10 +1840,10 @@ function GeminiConfigDialog:Open(appName, container, ...)
 	local options = app("dialog", MAJOR)
 
 	local f
-	
+
 	local path = new()
 	local name = GetOptionsMemberValue("name", options, options, path, appName)
-	
+
 	--If an optional path is specified add it to the path table before feeding the options
 	--as container is optional as well it may contain the first element of the path
 	if type(container) == "string" then
@@ -1877,7 +1853,7 @@ function GeminiConfigDialog:Open(appName, container, ...)
 	for n = 1, select("#",...) do
 		tinsert(path, (select(n, ...)))
 	end
-	
+
 	--if a container is given feed into that
 	if container then
 		f = container
@@ -1889,7 +1865,7 @@ function GeminiConfigDialog:Open(appName, container, ...)
 		end
 		local status = GeminiConfigDialog:GetStatusTable(appName)
 		if not status.width then
-			status.width =  800
+			status.width = 800
 		end
 		if not status.height then
 			status.height = 600
@@ -1959,19 +1935,19 @@ end
 -- @param name A descriptive name to display in the options tree (defaults to appName)
 -- @param parent The parent to use in the interface options tree.
 -- @param ... The path in the options table to feed into the interface options panel.
--- @return The reference to the frame registered into the Interface Options. 
+-- @return The reference to the frame registered into the Interface Options.
 function GeminiConfigDialog:AddToBlizOptions(appName, name, parent, ...)
 	local BlizOptions = GeminiConfigDialog.BlizOptions
-	
+
 	local key = appName
 	for n = 1, select("#", ...) do
 		key = key.."\001"..select(n, ...)
 	end
-	
+
 	if not BlizOptions[appName] then
 		BlizOptions[appName] = {}
 	end
-	
+
 	if not BlizOptions[appName][key] then
 		local group = gui:Create("BlizOptionsGroup", container)
 		BlizOptions[appName][key] = group
