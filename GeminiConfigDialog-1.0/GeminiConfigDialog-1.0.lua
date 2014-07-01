@@ -851,10 +851,6 @@ local function ActivateControl(widget, event, ...)
 		--call the function
 		if type(func) == "string" then
 			if handler and handler[func] then
-			   Event_FireGenericEvent("SendVarToRover", "Handler", handler)
-			   Event_FireGenericEvent("SendVarToRover", "Info'", info)
-			   Event_FireGenericEvent("SendVarToRover", "Extra", {...})
-
 			   safecall(handler[func],handler, info, ...)
 			else
 			   error(format("Method %s doesn't exist in handler for type func", func))
@@ -1893,10 +1889,10 @@ function GeminiConfigDialog:Open(appName, container, ...)
 		end
 		local status = GeminiConfigDialog:GetStatusTable(appName)
 		if not status.width then
-			status.width =  700
+			status.width =  800
 		end
 		if not status.height then
-			status.height = 500
+			status.height = 600
 		end
 		if f.SetStatusTable then
 			f:SetStatusTable(status)
