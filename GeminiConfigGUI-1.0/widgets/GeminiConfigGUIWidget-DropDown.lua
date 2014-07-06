@@ -77,7 +77,7 @@ do
     -- exported, GeminiConfigGUI callback
     local function OnRelease(self)
         if self.open then
-            self.downdown:Show()
+            self.dropdown:Show()
         end
         self:SetText("")
         self:SetDisabled(false)
@@ -439,4 +439,4 @@ do
     end
 
     GeminiConfigGUI:RegisterWidgetType(widgetType, Constructor, widgetVersion)
-end	
+end
