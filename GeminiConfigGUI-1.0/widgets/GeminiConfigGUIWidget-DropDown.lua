@@ -59,7 +59,7 @@ do
                 self:SetValue(value)
                 self:Fire("OnValueChanged", value)
             else
-                this:SetValue(true)
+                self:SetValue(true)
             end
             if self.open then
                 self.dropdown:Show(false)
@@ -364,7 +364,7 @@ do
         RadioDisallowNonSelection = true,
         Events = {
             ButtonCheck = "OnDropDownOptionPicked",
-            ButtonUncheck = "OnDropDownOptionPicked",
+            --ButtonUncheck = "OnDropDownOptionPicked",
         },
     }
     local tRadioButtonTemplate = {
@@ -388,7 +388,7 @@ do
         RadioDisallowNonSelection = true,
         Events = {
             ButtonCheck = "OnDropDownOptionPicked",
-            ButtonUncheck = "OnDropDownOptionPicked",
+            --ButtonUncheck = "OnDropDownOptionPicked",
         },
     }
 
