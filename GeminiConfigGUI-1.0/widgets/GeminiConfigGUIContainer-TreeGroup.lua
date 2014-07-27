@@ -447,14 +447,14 @@ local methods = {
     OnTreeNodeSelectionChanged = function(self, wndHandler, wndControl, selectedNode)
         if wndHandler ~= wndControl then return end
         local line = self.lines[selectedNode]
-        Print("Selection = " .. selectedNode .. " out of " .. #self.lines)
+       -- Print("Selection = " .. selectedNode .. " out of " .. #self.lines)
         self:Fire("OnClick", line.uniquevalue, line.selected)
-        if not line.selected then
+       -- if not line.selected then
             self:SetSelected(line.uniquevalue)
             line.selected = true
             --    frame:LockHighlight()
             --      self:RefreshTree()
-        end
+        --end
         GeminiConfigGUI:ClearFocus()
     end
 }
