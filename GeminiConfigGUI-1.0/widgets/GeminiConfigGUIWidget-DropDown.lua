@@ -302,8 +302,8 @@ do
                 RadioDisallowNonSelection = false,
                 Children = {
                     {
-                        AnchorPoints = { 0.5, 0, 0.5, 0 },
-                        AnchorOffsets = { -180, 10, 180, 200 },
+                        AnchorPoints = { 1, 0, 1, 0 },
+                        AnchorOffsets = { 0, -30, 360, 160 },
                         RelativeToClient = true,
                         Template = "Holo_Small_YesNoFlyout",
                         Name = "DropDownBackground",
