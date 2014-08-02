@@ -29,6 +29,10 @@ local math_min, math_max, math_floor = math.min, math.max, math.floor
 
 local emptyTbl = {}
 
+-- WildStar API
+require "Sound"
+local Sound = Sound
+
 --[[
 	xpcall safecall implementation
 ]]
@@ -761,7 +765,7 @@ local function ActivateControl(widget, event, ...)
         else
             -- TODO: do something else.
         end
-        PlaySound("igPlayerInviteDecline")
+        Sound.Play(Sound.PlayUIAlertPopUpMessageReceived)
         del(info)
         return true
     elseif not validated then
@@ -779,7 +783,7 @@ local function ActivateControl(widget, event, ...)
         else
             -- TODO: do something else
         end
-        PlaySound("igPlayerInviteDecline")
+        Sound.Play(Sound.PlayUIAlertPopUpMessageReceived)
         del(info)
         return true
     else
