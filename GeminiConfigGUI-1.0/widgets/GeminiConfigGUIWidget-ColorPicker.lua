@@ -10,6 +10,9 @@ if not GeminiConfigGUI or (GeminiConfigGUI:GetWidgetVersion(Type) or 0) >= Versi
 -- Lua APIs
 local pairs = pairs
 
+-- WildStar APIs
+local Apollo = Apollo
+
 -- WoW APIs
 local CreateFrame, UIParent = CreateFrame, UIParent
 
@@ -94,7 +97,13 @@ local methods = {
     OnSelectColor = function(self, wnd, ctr)
         if wnd ~= ctr then return end
         if not self.disabled then
-            self.GeminiColor:ShowColorPicker(self, "OnColorPicked", true, self.hex)
+            local tColorOpts = {
+                callback = "OnColorPicked",
+                bCustomColor = true,
+                bAlpha = self.HasAlpha,
+                strInitialColor = self.hex
+            }
+            self.GeminiColor:ShowColorPicker(self, tColorOpts)
         end
     end,
 
