@@ -1804,7 +1804,8 @@ end
 function GeminiConfigDialog:Close(appName)
     if self.OpenFrames[appName] then
         GeminiConfigDialog.frame.closing[appName] = true
-        GeminiConfigDialog.frame:SetScript("OnUpdate", RefreshOnUpdate)
+        --GeminiConfigDialog.frame:SetScript("OnUpdate", RefreshOnUpdate)
+        self.OpenFrames[appName]:Hide()
         return true
     end
 end
